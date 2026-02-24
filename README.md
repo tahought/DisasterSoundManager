@@ -9,7 +9,7 @@
 
 災害現場において、映像だけでは把握しきれない「崩落音」「叫び声」「浸水音」などの音情報は、二次災害の防止や迅速な救助に不可欠なピースです。しかし、既存の監視システムは視覚情報が主であり、音響データの活用は進んでいません。本アプリは、エッジAIによる音響解析とクラウド連携を組み合わせることで、**「音で命を守るインフラ」**を実現するために開発しました。
 
-<img src="public/images/unit_hardware.jpg" width="600" alt="収音部ユニットの外観">
+<img src="public/images/unit_hardware.png" width="600" alt="収音部ユニットの外観">
 
 ## 公開URL
 [https://disaster-sound-manager.vercel.app/](https://disaster-sound-manager.vercel.app/)
@@ -36,7 +36,7 @@ DCONでのデモンストレーションや運用訓練を想定し、仮想の�
 
 1. **ログイン**: 管理者アカウントでログインします（Next.js Middlewareにより認証保護されています）。
    ![ログイン画面](public/images/login_screen.png)
-   
+
    *※現在はデモ用のため、一部機能を制限して公開しています。*
 
 2. **状況監視**: ダッシュボードの地図（Map）とタイムライン（Feed）で、稼働中の全ユニットの状態を確認します。
