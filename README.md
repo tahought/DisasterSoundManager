@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Disaster Sound Manager (災害時音響監視システム)
 
-## Getting Started
+## 概要
 
-First, run the development server:
+災害発生時や危険区域における「異常音」をリアルタイムで検知・可視化し、迅速な状況把握を支援するダッシュボードアプリです。
+主に自治体の防災担当者や、現場の安全管理者を想定しています。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 開発の背景・経緯
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+災害現場において、映像だけでは把握しきれない「崩落音」「叫び声」「浸水音」などの音情報は、二次災害の防止や迅速な救助に不可欠です。しかし、既存の監視カメラシステムでは音へのフォーカスが十分ではありません。
+本アプリは、マイクデバイス（Unit）から収集した音圧データや分類結果を地図上にマッピングし、視覚的な状況判断を可能にすることを目的に開発しました。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 公開URL
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[https://disaster-sound-manager.vercel.app/]
 
-## Learn More
+## 特徴と機能の説明
 
-To learn more about Next.js, take a look at the following resources:
+### 1. リアルタイム・サウンドマッピング
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+地図上に配置された監視ユニットから、現在の音圧レベル（dB）をリアルタイムで取得し表示します。異常な音圧を検知すると、アイコンの色の変化やアニメーションによって管理者に即座に通知します。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. 音響イベントのタイムライン表示
 
-## Deploy on Vercel
+検知された音の種類（例：叫び声、崩落音、サイレンなど）を時系列でフィード形式に表示します。どの場所で、いつ、どのような種類の音が鳴ったのかを一目で把握できます。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. デバイスのリモート管理
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+各監視ユニットの稼働状態や感度設定をダッシュボードから一括で管理可能です。設置場所の環境に合わせて、検知しきい値を調整するなどのカスタマイズが行えます。
+
+## 使用技術 (技術スタック)
+
+### 言語・フレームワーク
+
+* **TypeScript**: 型安全な開発の実現
+* **Next.js (App Router)**: 高速なフロントエンド開発とルーティング
+* **Tailwind CSS / shadcn/ui**: モダングラフィカルなUIの実装
+
+### 主要ライブラリ
+
+* **Supabase (Realtime)**: 音圧データのリアルタイム同期
+* **Leaflet / React Leaflet**: 地図上へのデバイスマッピング
+* **Recharts**: 音圧データの推移をグラフ化
+* **Lucide React**: アイコンシステム
+
+### 開発ツール・インフラ
+
+* **VSCode**: 開発エディタ
+* **Supabase**: データベース、認証、リアルタイム通信
+* **Vercel**: ホスティング・デプロイ
+
+### システム構成図
+
+[ここに構成図の画像、またはMermaidなどの図を挿入してください]
+
+## 開発期間・体制
+
+* **開発体制**: 個人開発
+* **開発期間**: 2026.01.15 ~ 2026.02.24 (約400時間)
+
+## 工夫した点・苦労した点
+
+* **リアルタイム性の追求**: SupabaseのRealtime機能を活用し、数秒の遅延も許されない災害監視において、ストレスのないデータ更新を実現しました。
+* **直感的なUI/UX**: 地図とフィードを組み合わせることで、空間的な情報と時間的な情報の両方を同時に把握できるレイアウトを工夫しました。
+
+## 既知の課題と今後の展望
+
+* **AIによる音響解析の精度向上**: 現在はシミュレーションデータが中心ですが、実際の災害音を用いた学習モデルとの連携を目指します。
+* **音声通知機能**: 異常検知時に管理者の端末へ音声でアラートを飛ばす機能を実装予定です。
+* **モバイル対応**: 現場の作業員がスマートフォンからでも状況を確認できるレスポンシブ対応の強化。
