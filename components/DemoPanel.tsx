@@ -40,58 +40,78 @@ export function DemoPanel() {
 
     const injectIncident = async () => {
         setIsInjecting(true);
+        console.log("【デモ】プロセス開始...");
 
-        let targetId = selectedUnit.id;
-        let targetLat = selectedUnit.lat;
-        let targetLng = selectedUnit.lng;
+        try {
+            let targetId = selectedUnit.id;
+            let targetLat = selectedUnit.lat;
+            let targetLng = selectedUnit.lng;
 
-        if (mode === "custom") {
-            targetId = customUnitId || `custom-${Math.floor(Math.random() * 10000)}`;
-            targetLat = customPosition?.lat || 35.0;
-            targetLng = customPosition?.lng || 135.7;
+            if (mode === "custom") {
+                targetId = customUnitId || `custom-${Math.floor(Math.random() * 10000)}`;
+                targetLat = customPosition?.lat || 35.0;
+                targetLng = customPosition?.lng || 135.7;
 
-            // Ensure the custom unit exists in the database before adding incident
-            const { data: existingUnit } = await supabase
-                .from("units")
-                .select("id")
-                .eq("id", targetId)
-                .maybeSingle();
+                console.log("【デモ】カスタムユニットを確認中:", targetId);
 
-            if (!existingUnit) {
-                const { error: unitError } = await supabase.from("units").insert({
-                    id: targetId,
-                    latitude: targetLat,
-                    longitude: targetLng,
-                    battery: 100,
-                    signal_strength: 'Strong',
-                    status: 'online',
-                    threshold: 0.8
-                });
-                if (unitError) {
-                    alert(`ユニットの作成に失敗しました: ${unitError.message}`);
-                    setIsInjecting(false);
-                    return;
+                // Ensure the custom unit exists in the database before adding incident
+                const { data: existingUnit, error: checkError } = await supabase
+                    .from("units")
+                    .select("id")
+                    .eq("id", targetId)
+                    .maybeSingle();
+
+                if (checkError) {
+                    console.error("【デモ】ユニット確認中にエラー:", checkError);
+                    throw checkError;
+                }
+
+                if (!existingUnit) {
+                    console.log("【デモ】新規ユニットを作成します...");
+                    const { error: unitError } = await supabase.from("units").insert({
+                        id: targetId,
+                        latitude: targetLat,
+                        longitude: targetLng,
+                        battery: 100,
+                        signal_strength: 'Strong',
+                        status: 'online',
+                        threshold: 0.8
+                    });
+
+                    if (unitError) {
+                        console.error("【デモ】ユニット作成失敗:", unitError);
+                        throw unitError;
+                    }
                 }
             }
+
+            console.log("【デモ】インシデントを登録中...");
+            // Create an artificial incident entry
+            const { error: incidentError } = await supabase.from("incidents").insert({
+                unit_id: targetId,
+                type: selectedType,
+                confidence: confidence[0],
+                status: 'pending',
+                audio_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b82ecab8.mp3?filename=alert-33762.mp3', // Mock audio
+                latitude: targetLat + (Math.random() - 0.5) * 0.01, // Slight jitter for display
+                longitude: targetLng + (Math.random() - 0.5) * 0.01,
+            });
+
+            if (incidentError) {
+                console.error("【デモ】インシデント登録失敗:", incidentError);
+                throw incidentError;
+            }
+
+            console.log("【デモ】すべて成功！");
+            alert("成功しました");
+            setOpen(false);
+        } catch (error: any) {
+            console.error("【デモ】例外発生:", error);
+            // TypeError: Failed to fetch が出る場合、ここが表示されます
+            alert(`エラーが発生しました: ${error.message || "Failed to fetch"}\nブラウザのコンソール(F12)を確認してください。`);
+        } finally {
+            setIsInjecting(false);
         }
-
-        // Create an artificial incident entry
-        const { error: incidentError } = await supabase.from("incidents").insert({
-            unit_id: targetId,
-            type: selectedType,
-            confidence: confidence[0],
-            status: 'pending',
-            audio_url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b82ecab8.mp3?filename=alert-33762.mp3', // Mock audio
-            latitude: targetLat + (Math.random() - 0.5) * 0.01, // Slight jitter for display
-            longitude: targetLng + (Math.random() - 0.5) * 0.01,
-        });
-
-        if (incidentError) {
-            alert(`インシデントの作成に失敗しました: ${incidentError.message}`);
-        }
-
-        setIsInjecting(false);
-        setOpen(false);
     };
 
     const handlePositionChange = (pos: { lat: number; lng: number }) => {
