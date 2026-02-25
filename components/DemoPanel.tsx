@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ShieldAlert, AlertTriangle, MapPin } from "lucide-react";
+import { ShieldAlert, AlertTriangle, MapPin, Trash2 } from "lucide-react";
 
 // Dynamically import the map picker to avoid SSR issues with Leaflet
 const LocationPickerMap = dynamic(() => import("@/components/LocationPickerMap"), {
@@ -37,6 +37,7 @@ export function DemoPanel() {
     const [selectedType, setSelectedType] = useState(TYPES[0]);
     const [confidence, setConfidence] = useState([0.95]);
     const [isInjecting, setIsInjecting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const injectIncident = async () => {
         setIsInjecting(true);
@@ -114,6 +115,52 @@ export function DemoPanel() {
         }
     };
 
+    const deleteUnit = async () => {
+        let targetId = mode === "custom" ? customUnitId : selectedUnit.id;
+        if (!targetId) return;
+
+        if (!confirm(`ユニット "${targetId}" と関連するインシデントをデータベースから削除しますか？`)) {
+            return;
+        }
+
+        setIsDeleting(true);
+        console.log("【デモ】ユニット削除開始:", targetId);
+        try {
+            // First delete related incidents due to foreign key constraints if they exist
+            const { error: incError } = await supabase
+                .from("incidents")
+                .delete()
+                .eq("unit_id", targetId);
+
+            if (incError) {
+                console.error("【デモ】インシデント削除失敗:", incError);
+                throw incError;
+            }
+
+            // Then delete the unit
+            const { error: unitError } = await supabase
+                .from("units")
+                .delete()
+                .eq("id", targetId);
+
+            if (unitError) {
+                console.error("【デモ】ユニット削除失敗:", unitError);
+                throw unitError;
+            }
+
+            alert(`ユニット "${targetId}" を削除しました。`);
+            if (mode === "custom") {
+                setCustomUnitId(`custom-${Math.floor(Math.random() * 10000)}`);
+            }
+            setOpen(false);
+        } catch (error: any) {
+            console.error("【デモ】削除中にエラー:", error);
+            alert(`削除に失敗しました: ${error.message}`);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const handlePositionChange = (pos: { lat: number; lng: number }) => {
         setCustomPosition(pos);
     };
@@ -126,103 +173,112 @@ export function DemoPanel() {
                     デモツール
                 </Button>
             </DialogTrigger>
-            <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 sm:max-w-[450px]">
+            <DialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 sm:max-w-[400px] max-h-[85vh] overflow-y-auto overflow-x-hidden">
                 <DialogHeader>
-                    <DialogTitle>インシデント・シミュレーター</DialogTitle>
-                    <DialogDescription className="text-zinc-400">
-                        物理デバイスを使用せずに、データベースへ人工的に検知イベントを注入します。
-                    </DialogDescription>
+                    <div className="flex justify-between items-start pr-6">
+                        <div>
+                            <DialogTitle>インシデント・シミュレーター</DialogTitle>
+                            <DialogDescription className="text-zinc-400">
+                                物理デバイスを使用せずにイベントを注入します。
+                            </DialogDescription>
+                        </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-zinc-500 hover:text-destructive hover:bg-destructive/10"
+                            onClick={deleteUnit}
+                            disabled={isDeleting || isInjecting || (mode === "custom" && !customUnitId)}
+                            title="選択中のユニットを削除"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </Button>
+                    </div>
                 </DialogHeader>
 
                 <Tabs value={mode} onValueChange={(v) => setMode(v as "preset" | "custom")} className="w-full mt-2">
                     <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border-zinc-800">
-                        <TabsTrigger value="preset" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">既存ユニット</TabsTrigger>
-                        <TabsTrigger value="custom" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">マップでカスタム設置</TabsTrigger>
+                        <TabsTrigger value="preset" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">既存</TabsTrigger>
+                        <TabsTrigger value="custom" className="data-[state=active]:bg-zinc-800 data-[state=active]:text-white">カスタム</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="preset" className="space-y-4 py-4 min-h-[250px] flex flex-col justify-center">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <span className="text-right text-sm text-zinc-400">ユニット</span>
-                            <div className="col-span-3">
-                                <Select
-                                    value={selectedUnit.id}
-                                    onValueChange={(val) => setSelectedUnit(MOCK_UNITS.find(u => u.id === val) || MOCK_UNITS[0])}
-                                >
-                                    <SelectTrigger className="w-full bg-zinc-900 border-zinc-700">
-                                        <SelectValue placeholder="ユニットを選択" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-                                        {MOCK_UNITS.map(unit => (
-                                            <SelectItem key={unit.id} value={unit.id}>{unit.id} ({unit.lat.toFixed(2)}, {unit.lng.toFixed(2)})</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="custom" className="space-y-4 py-2 min-h-[250px]">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <span className="text-right text-sm text-zinc-400">ID名</span>
-                            <div className="col-span-3">
-                                <Input
-                                    value={customUnitId}
-                                    onChange={(e) => setCustomUnitId(e.target.value)}
-                                    placeholder="新ユニットID"
-                                    className="bg-zinc-900 border-zinc-700 text-sm h-8"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="text-xs text-zinc-400 mt-2 mb-1 pl-1">
-                            マップをクリックして設置場所を指定してください:
-                        </div>
-                        <LocationPickerMap position={customPosition} onPositionChange={handlePositionChange} />
-
-                        <div className="flex gap-4 text-xs text-zinc-500 justify-end pr-1">
-                            <span>緯度: {customPosition?.lat.toFixed(4) ?? "-"}</span>
-                            <span>経度: {customPosition?.lng.toFixed(4) ?? "-"}</span>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-
-                <div className="grid gap-4 pb-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="text-right text-sm text-zinc-400">音の種類</span>
-                        <div className="col-span-3">
-                            <Select value={selectedType} onValueChange={setSelectedType}>
-                                <SelectTrigger className="w-full bg-zinc-900 border-zinc-700 h-9">
-                                    <SelectValue placeholder="種類を選択" />
+                    <TabsContent value="preset" className="space-y-4 py-4 min-h-[150px] flex flex-col justify-center">
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm text-zinc-400">ユニット</span>
+                            <Select
+                                value={selectedUnit.id}
+                                onValueChange={(val) => setSelectedUnit(MOCK_UNITS.find(u => u.id === val) || MOCK_UNITS[0])}
+                            >
+                                <SelectTrigger className="w-full bg-zinc-900 border-zinc-700">
+                                    <SelectValue placeholder="ユニットを選択" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
-                                    {TYPES.map(t => (
-                                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                                    {MOCK_UNITS.map(unit => (
+                                        <SelectItem key={unit.id} value={unit.id}>{unit.id} ({unit.lat.toFixed(2)}, {unit.lng.toFixed(2)})</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="custom" className="space-y-4 py-2 min-h-[150px]">
+                        <div className="flex flex-col gap-2">
+                            <span className="text-sm text-zinc-400">ID名</span>
+                            <Input
+                                value={customUnitId}
+                                onChange={(e) => setCustomUnitId(e.target.value)}
+                                placeholder="新ユニットID"
+                                className="bg-zinc-900 border-zinc-700 text-sm h-8"
+                            />
+                        </div>
+
+                        <div className="text-xs text-zinc-400 mt-2 mb-1">
+                            マップで設置場所を指定:
+                        </div>
+                        <div className="h-[180px]">
+                            <LocationPickerMap position={customPosition} onPositionChange={handlePositionChange} />
+                        </div>
+
+                        <div className="flex gap-4 text-xs text-zinc-500 justify-end">
+                            <span>緯:{customPosition?.lat.toFixed(4) ?? "-"}</span>
+                            <span>経:{customPosition?.lng.toFixed(4) ?? "-"}</span>
+                        </div>
+                    </TabsContent>
+                </Tabs>
+
+                <div className="grid gap-3 pb-2 mt-2">
+                    <div className="flex flex-col gap-2">
+                        <span className="text-sm text-zinc-400">音の種類</span>
+                        <Select value={selectedType} onValueChange={setSelectedType}>
+                            <SelectTrigger className="w-full bg-zinc-900 border-zinc-700 h-9">
+                                <SelectValue placeholder="種類を選択" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100">
+                                {TYPES.map(t => (
+                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="text-right text-sm text-zinc-400">確信度</span>
-                        <div className="col-span-3 space-y-2">
-                            <Slider
-                                value={confidence}
-                                onValueChange={setConfidence}
-                                max={1.0}
-                                step={0.01}
-                                className="py-1"
-                            />
-                            <div className="text-xs text-zinc-500 text-right">
-                                {(confidence[0] * 100).toFixed(0)}%
-                            </div>
+                    <div className="flex flex-col gap-2 mt-1">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-zinc-400">確信度</span>
+                            <span className="text-xs text-zinc-500">{(confidence[0] * 100).toFixed(0)}%</span>
                         </div>
+                        <Slider
+                            value={confidence}
+                            onValueChange={setConfidence}
+                            max={1.0}
+                            step={0.01}
+                            className="py-1"
+                        />
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-2 border-t border-zinc-800 pt-4">
-                    <Button variant="ghost" className="hover:text-zinc-100 hover:bg-zinc-900" onClick={() => setOpen(false)}>キャンセル</Button>
+                <div className="flex justify-end gap-3 mt-4 border-t border-zinc-800 pt-4 sticky bottom-0 bg-zinc-950">
+                    <Button variant="ghost" size="sm" className="hover:text-zinc-100 hover:bg-zinc-900" onClick={() => setOpen(false)}>キャンセル</Button>
                     <Button
+                        size="sm"
                         className="bg-destructive hover:bg-destructive/90 text-white"
                         onClick={injectIncident}
                         disabled={isInjecting || (mode === "custom" && !customPosition)}
