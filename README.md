@@ -9,7 +9,7 @@
 
 災害現場において、映像だけでは把握しきれない「崩落音」「叫び声」「浸水音」などの音情報は、二次災害の防止や迅速な救助に不可欠なピースです。しかし、既存の監視システムは視覚情報が主であり、音響データの活用は進んでいません。本アプリは、エッジAIによる音響解析とクラウド連携を組み合わせることで、**「音で命を守るインフラ」**を実現するために開発しました。下の写真は音を取るユニットです。
 
-<img src="public/images/unit_hardware.png" width="200" alt="収音部ユニットの外観">
+<img src="public/images/unit_hardware.png" width="350" alt="収音部ユニットの外観">
 
 ## 公開URL
 [https://disaster-sound-manager.vercel.app/](https://disaster-sound-manager.vercel.app/)
@@ -18,24 +18,24 @@
 
 ### 1. リアルタイム・サウンドマッピング
 地図上に配置された監視ユニットから、音圧レベル（dB）をリアルタイムで取得。異常な音圧や特定の音（叫び声等）を検知すると、地図上のマーカーがアニメーションし、管理者に即座に視覚的アラートを通知します。
-<img src="public/images/map_view.png" width="300" alt="リアルタイムマップの様子">
+<img src="public/images/map_view.png" width="350" alt="リアルタイムマップの様子">
 
 ### 2. 音響イベントのタイムライン（Event Feed）
 検知された音の種類（叫び声、崩落音、サイレン等）を時系列でフィード表示します。「どこで、いつ、何が起きたか」をテキストとマップの両面から即座に把握可能です。
-<img src="public/images/event_feed.png" width="300" alt="イベントフィード画面">
+<img src="public/images/event_feed.png" width="350" alt="イベントフィード画面">
 
 ### 3. デバイスのリモート設定管理
 ダッシュボードから各ユニットの名称、設置場所、感度（しきい値）を直接変更できます。Supabaseの実装により、変更内容は瞬時に全管理画面へ同期されます。
-<img src="public/images/settings_view.png" width="300" alt="設定管理画面">
+<img src="public/images/settings_view.png" width="350" alt="設定管理画面">
 
 ### 4. シミュレーション機能 (Demo Panel)
 DCONでのデモンストレーションや運用訓練を想定し、仮想の音響イベントを発生させる機能を搭載。特定の場所で火災や事故が発生した状況を擬似的に作り出し、システムの挙動を確認できます。
-<img src="public/images/demo_panel.png" width="300" alt="デモパネルの操作">
+<img src="public/images/demo_panel.png" width="350" alt="デモパネルの操作">
 
 ## 使い方
 
 1. **ログイン**: 管理者アカウントでログインします（Next.js Middlewareにより認証保護されています）。
-   <img src="public/images/login_screen.png" width="300" alt="ログイン画面">
+   <img src="public/images/login_screen.png" width="350" alt="ログイン画面">
 
    *※現在はデモ用のため、一部機能を制限して公開しています。*
 
