@@ -47,10 +47,13 @@ DCONでのデモンストレーションや運用訓練を想定し、仮想の�
 
 <img src="public/images/demo_panel.png" width="250" alt="デモパネルの操作">
 
+
+
+
 ## 使い方
 
 1. **ログイン** 管理者アカウントでログインします（Next.js Middlewareにより認証保護されています）。
-<img src="public/images/login_screen.png" width="400" alt="ログイン画面">
+<img src="public/images/login_screen.png" width="350" alt="ログイン画面">
 *※現在はデモ用のため、一部機能を制限して公開しています。*
 2. **状況監視** ダッシュボードの地図（Map）とタイムライン（Feed）で、稼働中の全ユニットの状態を確認します。
 3. **詳細分析** 地図上のユニットをクリック、またはリストから選択して詳細チャートを表示。過去から現在までの音圧推移を確認します。
